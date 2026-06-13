@@ -1,0 +1,44 @@
+// file: ann_device.va
+`include "disciplines.vams"
+
+module ann_mosfet(d, g, s);
+    inout d, g, s;
+    electrical d, g, s;
+    
+    real Vgs, Vds, Ids;
+    
+    // 隐藏层神经元（5个）
+    real h1, h2, h3, h4, h5;
+    
+    analog begin
+        // 获取输入电压
+        Vgs = V(g, s);
+        Vds = V(d, s);
+        
+        // 第1层：输入到隐藏层（使用tanh激活）
+        // 权重和偏置来自训练结果（示例数值）
+        h1 = tanh( 0.5234*Vgs +  0.2134*Vds - 0.3124);
+        h2 = tanh(-0.4123*Vgs +  0.8234*Vds + 0.1234);
+        h3 = tanh( 0.1234*Vgs -  0.6123*Vds + 0.4567);
+        h4 = tanh(-0.2345*Vgs +  0.3456*Vds - 0.2345);
+        h5 = tanh( 0.3456*Vgs -  0.2345*Vds + 0.3456);
+        
+        // 第2层：隐藏层到输出（线性输出）
+        Ids =  0.7234*h1 
+             + 0.9123*h2 
+             - 0.3345*h3 
+             + 0.4567*h4 
+             - 0.2123*h5 
+             + 0.0234;
+        
+        // 物理约束：电流不能为负
+        Ids = max(Ids, 0);
+        
+        // 可选：添加平滑限制，避免过大的电流
+        Ids = min(Ids, 0.01);
+        
+        // 输出电流
+        I(d, s) <+ Ids;
+        I(g, s) <+ 0;
+    end
+endmodule

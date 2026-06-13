@@ -1,0 +1,61 @@
+// ANN-based MOSFET Model
+// Trained on BSIM4 data
+// Generated from PyTorch training
+// Hidden layer: 8 neurons
+
+`include "disciplines.vams"
+
+module ann_bsim(d, g, s);
+    inout d, g, s;
+    electrical d, g, s;
+    
+    // Geometry scaling parameters
+    parameter real w = 10e-6;
+    parameter real l = 1e-6;
+    
+    real Vgs, Vds, Ids;
+    real h1, h2, h3, h4, h5, h6, h7, h8;
+    
+    // Normalized inputs
+    real Vgs_n, Vds_n;
+    
+    // Normalization parameters (from training data)
+    real mean_vgs = 1.498034;
+    real scale_vgs = 0.865487;
+    real mean_vds = 1.498146;
+    real scale_vds = 0.863618;
+    
+    analog begin
+        // Get input voltages
+        Vgs = V(g, s);
+        Vds = V(d, s);
+        
+        // Normalize inputs
+        Vgs_n = (Vgs - mean_vgs) / scale_vgs;
+        Vds_n = (Vds - mean_vds) / scale_vds;
+        
+        // Hidden layer (tanh activation)
+        h1 = tanh(0.712609*Vgs_n + -0.139715*Vds_n + 1.918122);
+        h2 = tanh(0.116201*Vgs_n + -0.438614*Vds_n + 0.483741);
+        h3 = tanh(-2.881464*Vgs_n + 0.019239*Vds_n + -2.827799);
+        h4 = tanh(-3.834291*Vgs_n + 0.019451*Vds_n + -3.505408);
+        h5 = tanh(-0.131926*Vgs_n + 0.780512*Vds_n + 1.395724);
+        h6 = tanh(-0.291435*Vgs_n + 1.267582*Vds_n + 0.988580);
+        h7 = tanh(-0.168181*Vgs_n + -0.065642*Vds_n + 0.694102);
+        h8 = tanh(-0.144619*Vgs_n + -0.254639*Vds_n + 0.074383);
+
+        // Output layer (linear)
+        Ids = 0.305732*h1 + 0.286783*h2 + -0.150313*h3 + -0.990757*h4 + 0.594270*h5 + -0.239784*h6 + -0.368099*h7 + -0.494881*h8 + -1.093524;
+        
+        // Apply geometry scaling and convert to linear current
+        Ids = pow(10, Ids) * (w / l);
+        
+        // Physical constraints
+        if (Ids < 1e-12) Ids = 1e-12;
+        if (Ids > 0.01) Ids = 0.01;
+        
+        // Output current
+        I(d, s) <+ Ids;
+        I(g, s) <+ 0;
+    end
+endmodule

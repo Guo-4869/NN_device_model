@@ -1,0 +1,23 @@
+* Test ANN BSIM Model
+
+.control
+pre_osdi ann_bsim.osdi
+.endc
+
+.model NMOS1 ann_bsim(w=10e-6 l=1e-6)
+
+N1 d g 0 NMOS1
+
+Vds d 0 0
+Vgs g 0 0
+
+.dc Vgs 0 3 0.05 Vds 0 3 0.5
+
+.options savecurrents
+
+.control
+run
+plot vds#branch
+.endc
+
+.end

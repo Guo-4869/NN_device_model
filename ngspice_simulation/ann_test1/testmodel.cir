@@ -1,0 +1,28 @@
+* Test ANN BSIM Model - 修正版
+
+.control
+pre_osdi ann_bsim.osdi
+.endc
+
+.model NMOS1 ann_bsim(w=10e-6 l=1e-6)
+
+* 使用 Vmeas 测量漏极电流（与第一个网表相同的方法）
+N1 d_int g 0 NMOS1
+Vmeas d d_int 0
+
+Vds d 0 0
+Vgs g 0 0
+
+.dc Vgs 0 3 0.05 Vds 0 3 0.5
+
+.options savecurrents
+
+.control
+run
+* 绘制电流-电压特性族
+plot i(Vmeas)
+* 保存数据
+write ann_family.txt v(g) v(d) i(Vmeas)
+.endc
+
+.end

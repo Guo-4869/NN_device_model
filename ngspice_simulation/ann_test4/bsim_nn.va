@@ -1,0 +1,75 @@
+// ANN-based MOSFET Model - Fully compatible with OpenVAF
+// No custom functions, no macro, fully expanded
+
+`include "disciplines.vams"
+
+module ann_bsim(d, g, s);
+    inout d, g, s;
+    electrical d, g, s;
+    
+    parameter real w = 10e-6;
+    parameter real l = 10e-6;
+    
+    real Vgs, Vds, Ids, logIds;
+    real Vgs_n, Vds_n;
+    
+    // Normalization parameters
+    real mean_vgs = 1.5;
+    real scale_vgs = 0.866;
+    real mean_vds = 1.5;
+    real scale_vds = 0.866;
+    real mean_logids = -8.5;
+    real scale_logids = 3.2;
+    
+    // Hidden layer neurons
+    real h1, h2, h3, h4, h5;
+    real sum;
+    
+    analog begin
+        // Get input voltages
+        Vgs = V(g, s);
+        Vds = V(d, s);
+        
+        // Normalize inputs
+        Vgs_n = (Vgs - mean_vgs) / scale_vgs;
+        Vds_n = (Vds - mean_vds) / scale_vds;
+        
+        // Hidden layer using tanh directly (no custom function)
+        // You can replace these weights with trained values
+        sum = 0.5234*Vgs_n + 0.2134*Vds_n - 0.3124;
+        if (sum > 10) sum = 10;
+        if (sum < -10) sum = -10;
+        h1 = tanh(sum);
+        
+        sum = -0.4123*Vgs_n + 0.8234*Vds_n + 0.1234;
+        if (sum > 10) sum = 10;
+        if (sum < -10) sum = -10;
+        h2 = tanh(sum);
+        
+        sum = 0.1234*Vgs_n - 0.6123*Vds_n + 0.4567;
+        if (sum > 10) sum = 10;
+        if (sum < -10) sum = -10;
+        h3 = tanh(sum);
+        
+        sum = -0.2345*Vgs_n + 0.3456*Vds_n - 0.2345;
+        if (sum > 10) sum = 10;
+        if (sum < -10) sum = -10;
+        h4 = tanh(sum);
+        
+        sum = 0.3456*Vgs_n - 0.2345*Vds_n + 0.3456;
+        if (sum > 10) sum = 10;
+        if (sum < -10) sum = -10;
+        h5 = tanh(sum);
+        
+        // Output layer
+        logIds = 0.7234*h1 + 0.9123*h2 - 0.3345*h3 + 0.4567*h4 - 0.2123*h5 + 0.0234;
+        
+        // Denormalize and convert to linear current
+        logIds = logIds * scale_logids + mean_logids;
+        Ids = pow(10, logIds) * (w / l);
+        
+        // Output current
+        I(d, s) <+ Ids;
+        I(g, s) <+ 0;
+    end
+endmodule

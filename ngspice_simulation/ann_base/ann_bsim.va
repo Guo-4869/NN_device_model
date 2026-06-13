@@ -1,0 +1,62 @@
+// ANN-based MOSFET Model
+// Trained on BSIM4 data
+// Hidden layer: 10 neurons
+
+`include "disciplines.vams"
+
+module ann_bsim(d, g, s);
+    inout d, g, s;
+    electrical d, g, s;
+    
+    // Geometry scaling parameters
+    parameter real w = 10e-6;
+    parameter real l = 1e-6;
+    
+    real Vgs, Vds, Ids;
+    real h1, h2, h3, h4, h5, h6, h7, h8, h9, h10;
+
+    // Normalized inputs
+    real Vgs_n, Vds_n;
+    
+    // Normalization parameters
+    real mean_vgs = 1.499999;
+    real scale_vgs = 0.866027;
+    real mean_vds = 1.499998;
+    real scale_vds = 0.866026;
+    
+    analog begin
+        // Get input voltages
+        Vgs = V(g, s);
+        Vds = V(d, s);
+        
+        // Normalize inputs
+        Vgs_n = (Vgs - mean_vgs) / scale_vgs;
+        Vds_n = (Vds - mean_vds) / scale_vds;
+        
+        // Hidden layer (tanh activation)
+        h1 = tanh(0.347434*Vgs_n + 0.302472*Vds_n + -0.291463);
+        h2 = tanh(-0.555298*Vgs_n + -0.062330*Vds_n + -0.657247);
+        h3 = tanh(0.583813*Vgs_n + -0.134772*Vds_n + 0.317207);
+        h4 = tanh(0.464926*Vgs_n + -0.243302*Vds_n + 0.654418);
+        h5 = tanh(-0.630733*Vgs_n + 0.168121*Vds_n + -0.485388);
+        h6 = tanh(-0.623508*Vgs_n + 0.224420*Vds_n + 0.855110);
+        h7 = tanh(-0.622371*Vgs_n + -0.035287*Vds_n + -0.654463);
+        h8 = tanh(-0.546913*Vgs_n + 0.157809*Vds_n + -0.216298);
+        h9 = tanh(-0.052670*Vgs_n + 0.117943*Vds_n + 0.047871);
+        h10 = tanh(-0.288403*Vgs_n + 0.102920*Vds_n + -0.644593);
+
+        // Output layer (linear)
+        Ids = -0.161930*h1 + -0.005188*h2 + -0.154602*h3 + -0.205412*h4 + 0.027654*h5 + 0.100439*h6 + -0.002457*h7 + -0.613856*h8 + 0.000741*h9 + -0.484584*h10 + -0.210221;
+        
+        // Apply geometry scaling
+        Ids = Ids * (w / l) * 1e-3;
+        
+        // Physical constraints
+        if (Ids < 0) Ids = 0;
+        if (Ids > 0.01) Ids = 0.01;
+        
+        // Output current
+        I(d, s) <+ Ids;
+        I(g, s) <+ 0;
+    end
+endmodule

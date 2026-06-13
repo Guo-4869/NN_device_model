@@ -1,0 +1,22 @@
+* Test ANN model
+
+.control
+pre_osdi bsim_nn.osdi
+.endc
+
+.model NMOS1 bsim_nn(w=10e-6 l=10e-6)
+
+N1 d_int g 0 NMOS1
+Vmeas d d_int 0
+
+Vds d 0 2
+Vgs g 0 0
+
+.dc Vgs 0 3 0.05
+
+.control
+run
+plot i(Vmeas)
+.endc
+
+.end

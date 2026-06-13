@@ -1,0 +1,23 @@
+* ANN MOSFET family of curves
+
+N1 d g 0 MY_ANN_MODEL
+
+Vd d 0 0
+Vg g 0 0
+
+.dc Vd 0 5 0.05 Vg 0 5 1
+
+.options savecurrents
+
+.control
+pre_osdi ann_device.osdi
+run
+* 绘制电流 vs 漏极电压，使用不同颜色/线型区分 Vgs
+plot vd#branch
+* 添加图例
+* 注意：由于是神经网络模型，会产生平滑的非线性曲线
+.endc
+
+.model MY_ANN_MODEL ann_mosfet
+
+.end
