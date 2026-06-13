@@ -1,0 +1,46 @@
+* test_v6.cir
+* Test SPICE-compatible BSIM-NN v6 model
+
+.title BSIM-NN v6 Model Test
+
+.control
+pre_osdi bsim_nn_v6.osdi
+.endc
+
+.model NMOS1 bsim_nn_v6(w=10e-6 l=1e-6)
+
+* Test 1: Single operating point
+Vds1 d1 0 1.0
+Vgs1 g1 0 0.7
+M1 d1 g1 0 0 NMOS1
+
+* Test 2: Transfer curve
+Vds2 d2 0 1.0
+Vgs2 g2 0 0.0
+M2 d2 g2 0 0 NMOS1
+
+* Test 3: Output curve
+Vds3 d3 0 0.0
+Vgs3 g3 0 0.7
+M3 d3 g3 0 0 NMOS1
+
+.control
+op
+echo "=== Test 1: OP at VDS=1V, VGS=0.7V ==="
+print v(d1) i(Vds1)
+
+echo ""
+echo "=== Test 2: Transfer curve (VDS=1V) ==="
+dc Vgs2 0 1.2 0.02
+plot i(Vds2) vs Vgs2
+print i(Vds2) vs Vgs2 > transfer_v6.txt
+
+echo ""
+echo "=== Test 3: Output curve (VGS=0.7V) ==="
+dc Vds3 0 1.2 0.02
+plot i(Vds3) vs Vds3
+print i(Vds3) vs Vds3 > output_v6.txt
+
+.endc
+
+.end

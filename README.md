@@ -50,11 +50,20 @@ BSIM Physics Model --> Generate IV Training Data --> PyTorch NN Training --> Exp
 - **Derivative-assisted loss**: simultaneously fits ID, gm (transconductance), and gds (output conductance)
 - `ID = VDS * exp(y1)` output transformation ensures ID=0 at VDS=0
 
-### Version 5 -- Current Working Version (latest)
-- **3->16->16->1** Tanh MLP, outputting log10(ID)
+### Version 5 -- Simplified Working Version
+- 3->16->16->1 Tanh MLP, outputting log10(ID)
 - Simplified but convergent training pipeline
 - Direct Verilog-A code generation with extracted weights
 - **Known issues**: OSDI simulation hangs (see below)
+
+### Version 6 -- SPICE-Compatible (latest) **[NEW]**
+- **3->32->32->1** Tanh MLP with L2 weight regularization
+- **VBS body bias included in training data** (fixes near-zero std issue)
+- **Smooth tanh-based input clamping** in Verilog-A (no if/? : operators)
+- **Smooth VDS->0 transition** using rational function
+- **Gate/body conductance paths** to prevent singular Jacobian
+- **Weight-regularized training** (no weights > 5 in magnitude)
+- Run: cd version6 && python train_v6.py
 
 ## Tech Stack
 
